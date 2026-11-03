@@ -1,0 +1,10 @@
+function weekly(){
+ const start=weekStart(day),ds=days(start,add(start,6)),pref=S.prefs['week:'+start]||{},all=[],photos=[];
+ for(const d of ds){let rs=[...tasksOn(d).filter(r=>status(r,d)==='已完成'),...records('journal').filter(r=>r.date===d)];
+ for(const r of rs){all.push({r,d});if(r.kind==='journal')for(const f of S.files.filter(f=>f.item===r.id&&imageName(f.name)))photos.push(f)}}
+ const chosen=new Set(pref.photos||[]),pick=all.find(({r,d})=>r.id+'|'+d===pref.pick),existing=S.nextTasks.find(t=>t.week===start)?.item;
+ let timeline=ds.map(d=>{let list=all.filter(x=>x.d===d);return list.length?'<section class="timeday"><h3>'+parse(d).toLocaleDateString('zh-CN',{weekday:'short',month:'short',day:'numeric'})+'</h3>'+list.map(({r})=>'<button class="memory" data-a="'+(r.kind==='task'?'occurrence':'edit')+'" data-v="'+r.id+(r.kind==='task'?'|'+d:'')+'"><small>'+(r.kind==='task'?'✓ 已完成':'日记')+'</small><p>'+esc((r.notes||r.title).slice(0,150))+'</p>'+photos.filter(f=>f.item===r.id&&chosen.has(f.id)).map(f=>picture(f)).join('')+'</button>').join('')+'</section>':''}).join('');
+ return '<small>'+start+' 至 '+ds[6]+'</small><h2>这一周</h2><section class="weeklypick"><label>本周想记住的事'+select('weekPick',[['','从本周记录里挑一条'],...all.map(({r,d})=>[r.id+'|'+d,r.title])],pref.pick)+'</label>'+(pick?btn('打开原记录',pick.r.kind==='task'?'occurrence':'edit',pick.r.kind==='task'?pref.pick:pick.r.id):'')+'</section>'+timeline+(photos.length?'<details><summary>挑选本周照片</summary>'+photos.map(f=>'<label class="photochoice"><input type="checkbox" name="weekPhoto" value="'+f.id+'" '+(chosen.has(f.id)?'checked':'')+'>'+picture(f)+'</label>').join('')+'</details>':'')+'<section class="nextweek"><label>下周想做什么<input name="nextIdea" value="'+esc(pref.idea||'')+'" placeholder="留一句给下周的自己"></label><div class="toolbar">'+input('nextDate',pref.date||add(start,7),'date')+btn(existing?'查看已建任务':'记到任务里',existing?'edit':'makeNext',existing||'','accent')+'</div></section>'
+}
+async function weekPref(fields){let k='week:'+weekStart(day);const value={...S.prefs[k],...fields};S.prefs[k]=value;await A.pref(k,value)}
+

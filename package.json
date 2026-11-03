@@ -1,0 +1,14 @@
+{
+  "name": "daylight-personal",
+  "productName": "Daylight",
+  "version": "0.2.0",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test tests/*.test.cjs",
+    "build": "powershell -ExecutionPolicy Bypass -File build/package.ps1"
+  },
+  "devDependencies": {
+    "electron": "37.10.3"
+  }
+}

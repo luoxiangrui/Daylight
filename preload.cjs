@@ -1,0 +1,1 @@
+const {contextBridge,ipcRenderer}=require('electron');contextBridge.exposeInMainWorld('api',Object.fromEntries('stage publish toggleStep edition nextTask moveOccurrence state save mark pref remove attach photo extract backup restore markdown'.split(' ').map(k=>[k,(...args)=>ipcRenderer.invoke(k,...args)])));
