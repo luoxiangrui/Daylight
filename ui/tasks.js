@@ -1,6 +1,6 @@
 function recurring(r){return r.kind==='task'&&r.repeat&&r.repeat!=='不重复'}
-function taskAt(r,date){return Dates.taskVersion(r,date,S.editions)}
-function tasksOn(date){return records('task').filter(r=>occurs(taskAt(r,date),date)).map(r=>taskAt(r,date))}
+function taskAt(r,date){indexState();return Dates.taskVersion(r,date,byEdition.get(r.id)||[])}
+function tasksOn(date){return records('task').map(r=>taskAt(r,date)).filter(r=>occurs(r,date))}
 function datedTaskRow(r,d){
  const st=status(r,d);return '<div class="taskline row" data-id="'+r.id+'" draggable="true">'+btn(st==='已完成'?'✓':'○','mark',r.id+'|'+d).replace('<button','<button title="'+(st==='已完成'?'撤销完成':'标记完成')+'" aria-label="'+(st==='已完成'?'撤销完成':'标记完成')+'"')+'<button class="record" data-a="occurrence" data-v="'+r.id+'|'+d+'">'+esc(r.title)+'</button><small>'+esc(st==='已完成'?'已完成':r.start||st)+'</small></div>'
 }

@@ -1,3 +1,4 @@
+param([string]$PreviousInstaller)
 $ErrorActionPreference='Stop'
 Set-Location (Join-Path $PSScriptRoot '..')
 $electronDist=if(Test-Path 'node_modules/electron/dist'){Resolve-Path 'node_modules/electron/dist'}else{Resolve-Path '../eva-desktop/node_modules/electron/dist'}
@@ -7,19 +8,30 @@ $runtime=New-Item -Type Directory (Join-Path $stage 'runtime')
 Copy-Item "$electronDist/*" $runtime -Recurse
 Rename-Item (Join-Path $runtime 'electron.exe') 'Daylight.exe'
 $appDir=New-Item -Type Directory (Join-Path $runtime 'resources/app')
-Copy-Item package.json,main.cjs,preload.cjs,ui,db,tests $appDir -Recurse
+Copy-Item package.json,main.cjs,services.cjs,quick.cjs,quick-preload.cjs,preload.cjs,ui,db,tests $appDir -Recurse
 Add-Type -AssemblyName System.IO.Compression.FileSystem
+$compiler=Join-Path $env:windir 'Microsoft.NET/Framework64/v4.0.30319/csc.exe'
+& $compiler /nologo /target:winexe /r:System.Windows.Forms.dll "/out:$runtime/Uninstall.exe" (Join-Path $PSScriptRoot 'Uninstall.cs')
+if($LASTEXITCODE){throw 'Uninstaller compilation failed'}
 $zip=Join-Path $stage 'payload.zip'
 [IO.Compression.ZipFile]::CreateFromDirectory($runtime,$zip,[IO.Compression.CompressionLevel]::Optimal,$false)
 $compiler=Join-Path $env:windir 'Microsoft.NET/Framework64/v4.0.30319/csc.exe'
-$setup=Join-Path $out 'Daylight-Setup-x64.exe'
+$setup=Join-Path $out 'Daylight-0.3.0-Setup-x64.exe'
 & $compiler /nologo /target:winexe /r:System.Windows.Forms.dll /r:System.IO.Compression.dll /r:System.IO.Compression.FileSystem.dll "/resource:$zip,payload" "/out:$setup" (Join-Path $PSScriptRoot 'Setup.cs')
 if($LASTEXITCODE){throw 'Installer compilation failed'}
 $testDir=Join-Path $stage 'installed'
+if($PreviousInstaller){
+ $previous=Start-Process $PreviousInstaller -ArgumentList @('--verify',('"{0}"' -f $testDir)) -WindowStyle Hidden -Wait -PassThru
+ if($previous.ExitCode -or !(Test-Path "$testDir/Daylight.exe")){throw 'Previous installer verification failed'}
+ Write-Output 'Previous Windows build extracted for upgrade verification'
+}
 $p=Start-Process $setup -ArgumentList @('--verify',('"{0}"' -f $testDir)) -WindowStyle Hidden -Wait -PassThru
 if($p.ExitCode -or !(Test-Path "$testDir/resources/app/main.cjs")){throw 'Installer extraction failed'}
 $p=Start-Process "$testDir/Daylight.exe" -ArgumentList '--smoke' -WindowStyle Hidden -Wait -PassThru
 if($p.ExitCode){throw "Desktop smoke failed: $($p.ExitCode)"}
+$p=Start-Process "$testDir/Uninstall.exe" -ArgumentList '--verify' -WindowStyle Hidden -Wait -PassThru
+if($p.ExitCode -or (Test-Path "$testDir/Daylight.exe")){throw 'Uninstall verification failed'}
+(Get-FileHash $setup -Algorithm SHA256).Hash | Set-Content "$setup.sha256"
 Write-Output "Verified $setup"
 
 

@@ -1,8 +1,10 @@
-# Daylight · Windows 桌面版
+# Daylight 0.3.0 · Windows 桌面版
+
+[新版功能、快捷键、备份及迁移说明](docs/v0.3-使用与迁移.md) · [逐项验收](docs/v0.3-验收.md) · [发布说明](docs/v0.3-发布说明.md)
 
 ## 安装与启动
 
-双击 release/Daylight-Setup-x64.exe，在安装对话框选择确定。程序将安装在当前用户的 %LOCALAPPDATA%\Programs\Daylight，并在开始菜单创建 Daylight 入口。更新前请关闭 Daylight。程序和个人数据库位于不同目录。
+双击 release/Daylight-0.3.0-Setup-x64.exe，在安装对话框选择确定。程序将安装在当前用户的 %LOCALAPPDATA%\Programs\Daylight，并在开始菜单创建 Daylight 入口。更新前请关闭 Daylight。程序和个人数据库位于不同目录。
 
 ## 第一次使用
 
@@ -22,7 +24,7 @@
 
 ## 项目结构和运行
 
-Electron 37.10.3，原生 JavaScript，Node 内置 SQLite。ui 为界面和日期逻辑，db 为存储与版本化初始化脚本，main.cjs 管理桌面生命周期、文件选择与提醒，preload.cjs 限定界面可调用的操作。个人资料默认位于 Electron 的 userData 目录，数据库名称为 daylight.sqlite。首次启动执行 001.sql，现有库按 user_version 打开，较新版本会拒绝打开。0.2 版事务执行 002.sql 升级旧库，备份恢复兼容第 1 和第 2 版结构。
+Electron 37.10.3，原生 JavaScript，Node 内置 SQLite。ui 为界面和日期逻辑，db 为存储与版本化初始化脚本，main.cjs 管理桌面生命周期、文件选择与提醒，preload.cjs 限定界面可调用的操作。个人资料默认位于 Electron 的 userData 目录，数据库名称为 daylight.sqlite。首次启动执行 001.sql，现有库按 user_version 打开，较新版本会拒绝打开。v0.3.0 按顺序执行 002.sql 和 003.sql 的事务迁移。备份恢复兼容第 1、2、3 版结构。
 
-开发环境使用 Node 24。独立开发可运行 npm install，再运行 npm start。当前工作区也可使用相邻 EVA 项目中相同版本的 Electron 启动本目录。npm test 执行存储和日期测试。Windows 下 npm run build 生成安装包，构建脚本使用 .NET Framework 自带的 C# 编译器，内嵌完整运行环境，并从解包后的程序运行桌面冒烟测试。
+开发环境使用 Node 24。独立开发可运行 npm install，再运行 npm start。当前工作区也可使用相邻 EVA 项目中相同版本的 Electron 启动本目录。npm test 执行存储、迁移、日期、附件导出、备份轮换和故障回滚测试。Windows 下 npm run build 生成安装包，构建脚本使用 .NET Framework 自带的 C# 编译器，内嵌完整运行环境，并从解包后的程序运行桌面冒烟测试。
 

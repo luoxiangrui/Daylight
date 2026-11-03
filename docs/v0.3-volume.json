@@ -1,0 +1,10 @@
+{
+  "records": 2000,
+  "desktopReadyMs": 800,
+  "shortcut": "Ctrl Alt J",
+  "todayMs": 117,
+  "calendarMs": 37,
+  "journalMs": 115,
+  "insightsMs": 25,
+  "searchMs": 30
+}

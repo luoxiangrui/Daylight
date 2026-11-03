@@ -1,0 +1,10 @@
+CREATE TABLE tags(id INTEGER PRIMARY KEY, name TEXT NOT NULL COLLATE NOCASE UNIQUE, color TEXT NOT NULL DEFAULT '#657b67');
+CREATE TABLE item_tags(item INTEGER NOT NULL REFERENCES items ON DELETE CASCADE,tag INTEGER NOT NULL REFERENCES tags ON DELETE CASCADE,PRIMARY KEY(item,tag));
+CREATE INDEX tag_items ON item_tags(tag,item);
+CREATE INDEX history_item_time ON history(item,stamp);
+CREATE INDEX files_by_item ON files(item);
+CREATE TABLE goal_events(history_row INTEGER PRIMARY KEY,reason TEXT NOT NULL);
+CREATE TABLE completions(item INTEGER PRIMARY KEY REFERENCES items ON DELETE CASCADE,day TEXT NOT NULL);
+CREATE TRIGGER clear_goal_event AFTER DELETE ON history BEGIN DELETE FROM goal_events WHERE history_row=old.rowid; END;
+CREATE TABLE quick_receipts(token TEXT PRIMARY KEY,item INTEGER REFERENCES items ON DELETE SET NULL);
+PRAGMA user_version=3;
