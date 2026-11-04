@@ -1,0 +1,21 @@
+const {app,BrowserWindow}=require('electron'),fs=require('fs'),path=require('path'),os=require('os'),assert=require('assert/strict'),Store=require('../db/store.cjs'),D=require('../ui/dates');
+const dir=fs.mkdtempSync(path.join(os.tmpdir(),'daylight-window-gallery-')),out=path.resolve(__dirname,'../release/0.3.1-视觉验收');fs.mkdirSync(out,{recursive:true});app.setPath('userData',dir);
+const s=new Store(path.join(dir,'daylight.sqlite')),d=D.today(),ago=n=>D.add(d,-n),put=(kind,title,date=d,extra={})=>s.save({kind,title,date,...extra});
+s.pref('nick','小禾');s.pref('onboard',true);
+let g=put('goal','完成一册街区观察笔记',ago(20),{level:'长期',progress:36,endDate:D.add(d,45)}),sub=put('goal','画完沿河的三个街角',ago(6),{goal:g,level:'短期',progress:65,endDate:D.add(d,5)});put('milestone','整理第一组速写',D.add(d,3),{goal:sub});let plan=put('plan','城市速写练习',ago(10),{goal:sub,subject:'绘画',endDate:D.add(d,12),minutes:300});
+let focus=put('task','为街角速写补上最后一层颜色',d,{start:'09:00',end:'10:30',priority:'高',goal:sub});s.pref('focus:'+d,focus);put('task','整理桌面与画具',d,{start:'17:00',end:'17:30',subtasks:'清洗画笔\n归档草稿'});let done=put('task','把书送回图书馆');s.mark(done,d,'已完成');
+put('event','河边写生',d,{start:'10:00',end:'11:30'});put('event','读书小组',D.add(d,1),{start:'14:00',end:'15:30'});let h=put('habit','午后阅读',ago(48),{frequency:'每天'});let walk=put('habit','沿河散步',ago(31),{frequency:'每天'});
+for(let n=0;n<29;n++){if(n%4!==1)s.mark(h,ago(n),'1');if(n%3===0)s.mark(walk,ago(n),'1');if(n%3!==1)put('log','街区观察 · 第 '+(29-n)+' 次练习',ago(n),{minutes:15+n,subject:n%2?'绘画':'阅读',plan,goal:sub})}
+put('achievement','完成第一张钢笔街景',ago(2),{plan});put('moment','第一次拿起画笔',D.add(d,8),{repeat:'每年',important:'重要',category:'个人纪念日'});put('moment','冬季展览开幕',D.add(d,23),{category:'展览'});
+const j=put('journal','沿河走了一小段',d,{mood:'平静',tags:'散步，速写',notes:'出门时雾还没有散，河对岸的楼只看得见轮廓。我把速写本翻到昨天那一页，长椅边的树影刚好落在纸上。\n\n今天只画了桥下的三块石头。水位比上周低了一点，石头侧面留着一圈浅灰色的印子。画到一半有人牵着狗路过，那只狗坐下来，陪我看了几分钟的水。\n\n回家后想留一点空白，下次来时再把新看到的东西画上去。'});put('journal','窗台上的新叶',ago(1),{notes:'午后给薄荷换了水，最小的一片叶子已经舒展开了。',mood:'开心'});s.run('INSERT INTO files(item,name,bytes) VALUES(?,?,?)',j,'桌面样本.jpg',fs.readFileSync(path.join(process.env.WINDIR,'Web/Wallpaper/Windows/img0.jpg')));s.close();
+require('../main.cjs');
+app.once('browser-window-created',(_,w)=>w.webContents.once('did-finish-load',async()=>{const js=t=>w.webContents.executeJavaScript(t),wait=n=>new Promise(r=>setTimeout(r,n));try{
+ await js("(async()=>{while(!S)await new Promise(r=>setTimeout(r,30))})()");w.webContents.debugger.attach('1.3');
+ async function size(win,W,H){win.setContentSize(W,H);await win.webContents.debugger.sendCommand('Emulation.setDeviceMetricsOverride',{width:W,height:H,deviceScaleFactor:1,mobile:false})}
+ async function capture(win,file){await wait(150);let res=await win.webContents.debugger.sendCommand('Page.captureScreenshot',{format:'png',fromSurface:true,captureBeyondViewport:false});let buf=Buffer.from(res.data,'base64');assert(buf.length>8000);fs.writeFileSync(path.join(out,file+'.png'),buf)}
+ const screens=[['首页浅色','home'],['首页深色','home'],['今日任务','today'],['月历','calendar','月'],['周历','calendar','周'],['日历日视图','calendar','日'],['日记列表','journal'],['专注写作','journal'],['学习中心','learning'],['目标中心','goals'],['习惯','habits'],['纪念日','moments'],['周报','insights','周'],['月报','insights','月'],['设置','settings'],['快速记录','quick']];
+ for(const [W,H] of [[1280,800],[1440,900],[1920,1080]]){await size(w,W,H);
+ for(const [name,page,view] of screens){await js("if(dlg.open)dlg.close();");await js("A.pref('appearance','"+(name==='首页深色'?'深色':'浅色')+"').then(refresh)");if(page==='quick'){await js("A.openCapture()");let q=BrowserWindow.getAllWindows().find(x=>x!==w);await wait(200);q.webContents.debugger.attach('1.3');await size(q,W,H);await capture(q,W+'x'+H+'-'+name);q.close();continue}
+ await js("act('page','"+page+"')");if(view)await js("act('"+(page==='calendar'?'cal':'period')+"','"+view+"')");if(name==='专注写作')await js("editor(records('journal')[0]);act('focusWrite','')");await js("scrollTo(0,0)");assert(await js("document.documentElement.scrollWidth<=innerWidth"),name);await capture(w,W+'x'+H+'-'+name)}
+ }fs.writeFileSync(path.join(out,'验证.txt'),'48 个 Electron 渲染截图，独立测试资料。尺寸为内容区像素。');app.exit(0)
+ }catch(e){fs.writeFileSync(path.join(out,'error.txt'),e.stack);app.exit(1)}}));

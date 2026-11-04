@@ -6,7 +6,7 @@ class Uninstall {
  [STAThread] static int Main(string[] args){
  bool test=args.Length==1&&args[0]=="--verify";string folder=AppDomain.CurrentDomain.BaseDirectory;
  try{
- if(!test&&MessageBox.Show("卸载 Daylight 0.3.0？个人资料和备份将保留。请先退出程序。","Daylight",MessageBoxButtons.OKCancel)!=DialogResult.OK)return 0;
+ if(!test&&MessageBox.Show("卸载 Daylight 0.4.0？个人资料和备份将保留。请先退出程序。","Daylight",MessageBoxButtons.OKCancel)!=DialogResult.OK)return 0;
  string manifest=Path.Combine(folder,"daylight-installed.txt");
  if(!File.Exists(manifest))throw new IOException("缺少安装清单。");
  foreach(string name in File.ReadAllLines(manifest)){string target=Path.GetFullPath(Path.Combine(folder,name));if(!target.StartsWith(folder,StringComparison.OrdinalIgnoreCase))throw new IOException("安装清单路径无效");if(!String.Equals(target,System.Reflection.Assembly.GetExecutingAssembly().Location,StringComparison.OrdinalIgnoreCase)&&File.Exists(target))File.Delete(target);}

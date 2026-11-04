@@ -8,7 +8,7 @@ module.exports=function services(ctx){
  async function exportAll(only){let dir=await directory();if(!dir)return false;let tmp=path.join(require('node:os').tmpdir(),'daylight-export-'+crypto.randomUUID()+'.sqlite'),snap;try{await M.backup(filename,tmp);snap=new Store(tmp);return await exportFolder(snap,dir,only)}finally{snap?.close();await fs.promises.rm(tmp,{force:true})}}
  return {runAuto,actions:{
  tags:o=>store().changeTag(o),
- exportBook:()=>exportAll(false),exportFiles:()=>exportAll(true),
+ markdown:()=>exportAll(false),exportBook:()=>exportAll(false),exportFiles:()=>exportAll(true),
  autoDirectory:async()=>{let dir=await directory();if(dir)store().pref('auto.dir',dir);return dir},
  autoConfig:(frequency,keep)=>{if(!['关闭','每日','每周'].includes(frequency)||!Number.isInteger(keep)||keep<1||keep>100)throw Error('备份设置无效');store().atomic(()=>{store().pref('auto.frequency',frequency);store().pref('auto.keep',keep)})},
  autoNow:()=>runAuto(true),

@@ -1,0 +1,17 @@
+{
+  "displays": 1,
+  "attachmentCount": 128,
+  "backupCalendar": "pass",
+  "maximized": true,
+  "decoded": 128,
+  "pageSwitches": 480,
+  "garbageCollectedHeapKiB": [
+    1138,
+    1301,
+    1278,
+    1289,
+    1310,
+    1312
+  ],
+  "elapsedMs": 123204
+}

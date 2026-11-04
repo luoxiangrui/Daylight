@@ -5,7 +5,7 @@ module.exports=function quickCapture(main,getStore,testing){
  function open(){if(!window||window.isDestroyed()){
  window=new BrowserWindow({title:'快速记录 · Daylight',width:480,height:475,minWidth:360,minHeight:370,show:false,autoHideMenuBar:true,webPreferences:{preload:path.join(__dirname,'quick-preload.cjs'),sandbox:true}});
  window.webContents.setWindowOpenHandler(()=>({action:'deny'}));window.webContents.on('will-navigate',e=>e.preventDefault());
- window.once('ready-to-show',()=>window?.show());window.loadFile(path.join(__dirname,'ui/quick.html'));window.on('closed',()=>{window=null})
+ window.once('ready-to-show',()=>window?.show());window.loadFile(path.join(__dirname,'ui/quick.html'),{query:{theme:JSON.parse(getStore().rows("SELECT value FROM prefs WHERE key='appearance'")[0]?.value||'"跟随系统"')}});window.on('closed',()=>{window=null})
  }else{window.show();window.focus()}}
  ipcMain.handle('quickCommit',(e,token,r)=>{if(e.sender!==window?.webContents||e.senderFrame!==e.sender.mainFrame||!/^[-a-f0-9]{36}$/.test(token)||!['journal','task','log','moment'].includes(r.kind))throw Error('无效的快速记录');const store=getStore();let id=store.atomic(()=>{let existing=store.rows('SELECT item FROM quick_receipts WHERE token=?',token)[0];if(existing)return existing.item;let item=store.save(r);store.run('INSERT INTO quick_receipts VALUES(?,?)',token,item);return item});main.webContents.send('recordsChanged');return id});
  ipcMain.handle('openCapture',e=>{if(e.sender===main.webContents&&e.senderFrame===e.sender.mainFrame)open()});

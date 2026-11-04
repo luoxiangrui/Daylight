@@ -16,7 +16,7 @@ if($LASTEXITCODE){throw 'Uninstaller compilation failed'}
 $zip=Join-Path $stage 'payload.zip'
 [IO.Compression.ZipFile]::CreateFromDirectory($runtime,$zip,[IO.Compression.CompressionLevel]::Optimal,$false)
 $compiler=Join-Path $env:windir 'Microsoft.NET/Framework64/v4.0.30319/csc.exe'
-$setup=Join-Path $out 'Daylight-0.3.0-Setup-x64.exe'
+$setup=Join-Path $out 'Daylight-0.4.0-Setup-x64.exe'
 & $compiler /nologo /target:winexe /r:System.Windows.Forms.dll /r:System.IO.Compression.dll /r:System.IO.Compression.FileSystem.dll "/resource:$zip,payload" "/out:$setup" (Join-Path $PSScriptRoot 'Setup.cs')
 if($LASTEXITCODE){throw 'Installer compilation failed'}
 $testDir=Join-Path $stage 'installed'
@@ -31,7 +31,9 @@ $p=Start-Process "$testDir/Daylight.exe" -ArgumentList '--smoke' -WindowStyle Hi
 if($p.ExitCode){throw "Desktop smoke failed: $($p.ExitCode)"}
 $p=Start-Process "$testDir/Uninstall.exe" -ArgumentList '--verify' -WindowStyle Hidden -Wait -PassThru
 if($p.ExitCode -or (Test-Path "$testDir/Daylight.exe")){throw 'Uninstall verification failed'}
-(Get-FileHash $setup -Algorithm SHA256).Hash | Set-Content "$setup.sha256"
+$stream=[IO.File]::OpenRead($setup)
+$algorithm=[Security.Cryptography.SHA256]::Create()
+try{[BitConverter]::ToString($algorithm.ComputeHash($stream)).Replace('-','') | Set-Content "$setup.sha256"}finally{$algorithm.Dispose();$stream.Dispose()}
 Write-Output "Verified $setup"
 
 

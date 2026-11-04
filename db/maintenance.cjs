@@ -3,9 +3,9 @@ const {DatabaseSync}=require('node:sqlite'),{Worker,isMainThread,parentPort,work
 const promises=fs.promises;
 function inspect(file){
  const db=new DatabaseSync(file,{readOnly:true});try{
- const version=db.prepare('PRAGMA user_version').get().user_version;if(![1,2,3].includes(version))throw Error('备份版本不支持');
+ const version=db.prepare('PRAGMA user_version').get().user_version;if(![1,2,3,4].includes(version))throw Error('备份版本不支持');
  if(db.prepare('PRAGMA integrity_check').all().some(r=>r.integrity_check!=='ok'))throw Error('SQLite 完整性检查失败');
- let tables=['items','prefs','marks','files','notices','history'];if(version>=2)tables.push('editions','next_tasks','daily_steps','draft_files');if(version>=3)tables.push('tags','item_tags','goal_events','completions','quick_receipts');for(const t of tables)db.prepare('SELECT * FROM '+t+' LIMIT 0').all();
+ let tables=['items','prefs','marks','files','notices','history'];if(version>=2)tables.push('editions','next_tasks','daily_steps','draft_files');if(version>=3)tables.push('tags','item_tags','goal_events','completions','quick_receipts');if(version>=4)tables.push('habit_days');for(const t of tables)db.prepare('SELECT * FROM '+t+' LIMIT 0').all();
  if(db.prepare('PRAGMA foreign_key_check').all().length)throw Error('有孤立的关联记录');
  if(db.prepare("SELECT 1 FROM files WHERE item IS NULL OR name IS NULL OR typeof(bytes)!='blob' LIMIT 1").get())throw Error('附件关联或内容无效');
  if(db.prepare("SELECT 1 FROM items WHERE NOT json_valid(data) OR json_type(data)!='object' LIMIT 1").get())throw Error('记录数据结构损坏');
